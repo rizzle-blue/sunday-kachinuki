@@ -1,9 +1,10 @@
 begin;
-select plan(34);
+select plan(41);
 
 select has_table('sunday_private', 'kenshi_profiles', 'Sunday profiles use standalone private storage');
 select has_table('sunday_private', 'game_sessions', 'Sunday owns an isolated game session');
 select has_table('sunday_private', 'team_matches', 'Sunday owns isolated TeamMatches');
+select has_column('sunday_private', 'kenshi_profiles', 'nickname', 'profiles retain the on-site nickname');
 select is((select count(*) from sunday_private.kenshi_profiles), 8::bigint, 'synthetic seed keeps eight demo profile cards');
 select is((select count(*) from sunday_private.kenshi_profiles where invite_code_hash is not null), 8::bigint, 'every demo profile receives an invite code');
 select is((select count(distinct invite_code_hash) from sunday_private.kenshi_profiles where invite_code_hash is not null), 8::bigint, 'demo invite codes have no collision');
@@ -11,6 +12,8 @@ select is((select count(*) from sunday_private.game_sessions where state='lobby'
 select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid='sunday_private.team_matches'::regclass), 'game storage enables and forces RLS');
 select ok(not has_table_privilege('authenticated','sunday_private.kenshi_profiles','select'), 'authenticated callers cannot bypass profile RPCs');
 select ok(not has_function_privilege('anon','public.redeem_sunday_invite(text)'::regprocedure,'execute'), 'unauthenticated callers cannot redeem an invite');
+select ok(to_regprocedure('public.register_sunday_profile(text,text,text,integer,text)') is not null, 'fast registration is exposed through one narrow RPC');
+select ok(not has_function_privilege('anon','public.register_sunday_profile(text,text,text,integer,text)'::regprocedure,'execute'), 'unauthenticated callers cannot fast register');
 select hasnt_table('public','kenshi_profiles','profile storage is not exposed as a public table');
 
 insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,created_at,updated_at,is_anonymous)
@@ -20,7 +23,7 @@ select
   'authenticated','authenticated',
   case when number=99 then 'host@sunday.test' else null end,
   '',now(),now(),now(),number<>99
-from unnest(array[1,2,3,4,5,6,7,99]) number;
+from unnest(array[1,2,3,4,5,6,7,8,99]) number;
 
 insert into sunday_private.operators(auth_subject_id,role)
 values('93000000-0000-4000-8000-000000000099','host_recorder');
@@ -30,6 +33,15 @@ set local role authenticated;
 select is(public.redeem_sunday_invite('one_demo')->>'name','Demo Kenshi One','invite redirects to the matching profile');
 select lives_ok($$ select public.set_sunday_ready(true,'94000000-0000-4000-8000-000000000001') $$,'first Kenshi becomes Ready');
 reset role;
+
+select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000008',true);
+set local role authenticated;
+select throws_ok($$ select public.register_sunday_profile('Walkin Kenshi','Walkin','Shakaijin',1,'9_dan') $$,'22023','22023','fast registration rejects an unknown Dan');
+select is(public.register_sunday_profile('Walkin Kenshi','Walkin','Shakaijin',1,'under_1_dan')->>'nickname','Walkin','fast registration creates a private profile');
+select is(public.register_sunday_profile('Changed Name','Changed','Other Dojo',9,'3_dan')->>'name','Walkin Kenshi','retry returns the already-linked profile');
+reset role;
+
+select is((select count(*) from sunday_private.kenshi_profiles where registration_source='fast'),1::bigint,'one fast-registration profile is stored');
 
 select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000007',true);
 set local role authenticated;
@@ -50,7 +62,7 @@ begin
 end
 $$;
 
-select is((select count(*) from sunday_private.profile_sessions),7::bigint,'seven phone sessions link to six profiles');
+select is((select count(*) from sunday_private.profile_sessions),8::bigint,'eight phone sessions link to seven profiles');
 select is((select count(*) from sunday_private.session_entries),6::bigint,'Ready remains unique per profile');
 
 select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000099',true);

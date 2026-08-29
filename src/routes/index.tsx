@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { ensureAnonymousSession, getProfile, normalizeInviteCode, redeemInvite } from "@/lib/api";
+import { MenMark } from "@/components/men-mark";
+import { ensureAnonymousSession, getProfile, normalizeInviteCode, redeemInvite, registerProfile } from "@/lib/api";
 
 declare global {
   interface Window {
@@ -8,23 +9,42 @@ declare global {
   }
 }
 
+const DAN_OPTIONS = [
+  ["under_1_dan", "Dưới 1 Dan"],
+  ["1_dan", "1 Dan"],
+  ["2_dan", "2 Dan"],
+  ["3_dan", "3 Dan"],
+  ["4_dan", "4 Dan"],
+  ["5_dan", "5 Dan"],
+  ["6_dan", "6 Dan"],
+  ["7_dan", "7 Dan"],
+  ["8_dan", "8 Dan"],
+] as const;
+
+type DanLevel = (typeof DAN_OPTIONS)[number][0];
+type PendingEntrance =
+  | Readonly<{ kind: "invite"; code: string }>
+  | Readonly<{ kind: "register"; name: string; nickname: string; dojo: string; practiceYears: number; dan: DanLevel }>;
+
 export const Route = createFileRoute("/")({ component: Entrance });
 
+function plainText(value: FormDataEntryValue | null): string {
+  return String(value ?? "").trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replaceAll("đ", "d").replaceAll("Đ", "D").replace(/\s+/g, " ");
+}
+
 function Entrance() {
+  const [mode, setMode] = useState<"invite" | "register">("invite");
   const [hydrated, setHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [captchaToken, setCaptchaToken] = useState<string>();
-  const [pendingCode, setPendingCode] = useState<string>();
+  const [pending, setPending] = useState<PendingEntrance>();
   const widgetRoot = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | undefined>(undefined);
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => setHydrated(true), []);
-
-  useEffect(() => {
-    void getProfile().then(() => window.location.assign("/profile")).catch(() => undefined);
-  }, []);
+  useEffect(() => { void getProfile().then(() => window.location.assign("/profile")).catch(() => undefined); }, []);
 
   useEffect(() => {
     if (!siteKey || !widgetRoot.current) return;
@@ -51,34 +71,110 @@ function Entrance() {
   }, [siteKey]);
 
   useEffect(() => {
-    if (!pendingCode || (siteKey && !captchaToken)) return;
-    void enter(pendingCode, captchaToken);
-  }, [captchaToken, pendingCode, siteKey]);
+    if (!pending || (siteKey && !captchaToken)) return;
+    void enter(pending, captchaToken);
+  }, [captchaToken, pending, siteKey]);
 
-  async function enter(code: string, token?: string) {
+  async function enter(action: PendingEntrance, token?: string) {
     setBusy(true);
     setError(null);
     try {
       await ensureAnonymousSession(token);
-      await redeemInvite(code);
+      if (action.kind === "invite") await redeemInvite(action.code);
+      else {
+        await registerProfile({
+          name: action.name,
+          nickname: action.nickname,
+          dojo: action.dojo,
+          practiceYears: action.practiceYears,
+          dan: action.dan,
+        });
+      }
       window.location.assign("/profile");
     } catch {
       setBusy(false);
-      setPendingCode(undefined);
+      setPending(undefined);
       setCaptchaToken(undefined);
       if (widgetId.current) window.turnstile?.reset(widgetId.current);
-      setError("Invite code chưa đúng. Kiểm tra lại và thử lần nữa nhé.");
+      setError(action.kind === "invite" ? "Invite code chưa đúng. Kiểm tra lại và thử lần nữa nhé." : "Chưa thể tạo Kenshi profile. Kiểm tra các thông tin và thử lại.");
     }
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  function queue(action: PendingEntrance) {
+    setPending(action);
+    setError(null);
+    if (siteKey && !captchaToken) {
+      if (widgetId.current) window.turnstile?.execute(widgetId.current);
+      else setError("Đang chuẩn bị xác minh, thử lại sau vài giây.");
+    }
+  }
+
+  function submitInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
     const code = normalizeInviteCode(String(new FormData(event.currentTarget).get("invite") ?? ""));
-    if (!/^[a-z0-9]+_[a-z0-9]+$/.test(code)) { setError("Code có dạng given_family."); return; }
-    setPendingCode(code);
-    if (siteKey && !captchaToken) { if (widgetId.current) window.turnstile?.execute(widgetId.current); else setError("Đang chuẩn bị xác minh, thử lại sau vài giây."); }
+    if (!/^[a-z0-9]+_[a-z0-9]+$/.test(code)) { setError("Code có dạng tu_nguyen."); return; }
+    queue({ kind: "invite", code });
   }
 
-  return <main className="hero shell"><div className="hero-grid"><section><p className="kicker">31 · 08 · 2026 / secret session</p><h1>Sunday<br />Kachinuki</h1><p className="hero-copy">Một giờ. Một court. Đội thắng sống tiếp, đội thua trở lại vòng xoay. Trước tiên—hãy mở lá bài Kenshi của bạn.</p></section><section className="panel"><form className="stack" onSubmit={submit}><div className="field"><label htmlFor="invite">Invite code</label><input className="input" id="invite" name="invite" placeholder="given_family" autoCapitalize="none" autoCorrect="off" spellCheck={false} required disabled={busy} /></div><div ref={widgetRoot} aria-hidden="true" /><button className="button" type="submit" disabled={busy || !hydrated}>{busy ? "Đang mở cổng…" : "Reveal my card"}</button><div aria-live="polite">{error ? <p className="error">{error}</p> : null}</div></form></section></div></main>;
+  function submitRegistration(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (busy) return;
+    const data = new FormData(event.currentTarget);
+    const name = plainText(data.get("name"));
+    const nickname = plainText(data.get("nickname"));
+    const dojo = plainText(data.get("dojo"));
+    const practiceYears = Number(data.get("practiceYears"));
+    const dan = String(data.get("dan"));
+    if (name.length < 2 || nickname.length < 1 || dojo.length < 2 || !Number.isInteger(practiceYears) || practiceYears < 0 || practiceYears > 100 || !DAN_OPTIONS.some(([value]) => value === dan)) {
+      setError("Điền đủ tên, nickname, dojo, Dan và số năm tập nhé.");
+      return;
+    }
+    queue({ kind: "register", name, nickname, dojo, practiceYears, dan: dan as DanLevel });
+  }
+
+  function selectMode(nextMode: "invite" | "register") {
+    if (busy) return;
+    setMode(nextMode);
+    setError(null);
+  }
+
+  return (
+    <main className="hero shell">
+      <div className="hero-grid">
+        <section className="hero-intro">
+          <MenMark className="hero-mark" />
+          <p className="kicker">31 · 08 · 2026 / secret session</p>
+          <h1>Sunday<br />Kachinuki</h1>
+          <p className="hero-copy">Một giờ. Một court. Đội thắng sống tiếp, đội thua trở lại vòng xoay. Mở Battle Card rồi bước vào đội hình.</p>
+        </section>
+        <section className="panel entrance-panel">
+          <div className="segmented" role="tablist" aria-label="Cách vào Sunday Kachinuki">
+            <button type="button" role="tab" aria-selected={mode === "invite"} className={mode === "invite" ? "active" : ""} onClick={() => selectMode("invite")}>Invite code</button>
+            <button type="button" role="tab" aria-selected={mode === "register"} className={mode === "register" ? "active" : ""} onClick={() => selectMode("register")}>Fast register</button>
+          </div>
+          {mode === "invite" ? (
+            <form className="stack" onSubmit={submitInvite}>
+              <div className="field"><label htmlFor="invite">Invite code</label><input className="input" id="invite" name="invite" placeholder="tu_nguyen" autoCapitalize="none" autoCorrect="off" spellCheck={false} required disabled={busy} /></div>
+              <button className="button" type="submit" disabled={busy || !hydrated}>{busy ? "Đang mở cổng…" : "Reveal my card"}</button>
+            </form>
+          ) : (
+            <form className="stack" onSubmit={submitRegistration}>
+              <div className="register-grid">
+                <div className="field register-wide"><label htmlFor="name">Họ và tên</label><input className="input" id="name" name="name" placeholder="Nguyen Thi Cam Tu" maxLength={120} required disabled={busy} /></div>
+                <div className="field"><label htmlFor="nickname">Nickname</label><input className="input" id="nickname" name="nickname" placeholder="Tu" maxLength={40} required disabled={busy} /></div>
+                <div className="field"><label htmlFor="dojo">Dojo</label><input className="input" id="dojo" name="dojo" placeholder="Shakaijin" maxLength={120} required disabled={busy} /></div>
+                <div className="field"><label htmlFor="practiceYears">Số năm tập</label><input className="input" id="practiceYears" name="practiceYears" type="number" inputMode="numeric" min={0} max={100} step={1} placeholder="2" required disabled={busy} /></div>
+                <div className="field"><label htmlFor="dan">Dan</label><select className="select" id="dan" name="dan" defaultValue="under_1_dan" required disabled={busy}>{DAN_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
+              </div>
+              <p className="form-note">Tên có dấu sẽ tự chuyển về không dấu để dễ quản lý đội hình.</p>
+              <button className="button" type="submit" disabled={busy || !hydrated}>{busy ? "Đang tạo profile…" : "Create my Battle Card"}</button>
+            </form>
+          )}
+          <div ref={widgetRoot} aria-hidden="true" />
+          <div aria-live="polite">{error ? <p className="error">{error}</p> : null}</div>
+        </section>
+      </div>
+    </main>
+  );
 }

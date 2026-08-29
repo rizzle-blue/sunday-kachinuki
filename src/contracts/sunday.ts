@@ -17,12 +17,20 @@ export const sundayProfileSchema = z.object({
   profileId: uuid,
   dojo: text,
   name: text,
+  nickname: z.string().trim().min(1).max(40),
   dan: z.enum(KENSHI_DAN_LEVELS),
   practiceYears: z.number().int().min(0).max(100),
   card: sundayCardSchema,
 }).strict();
 
 export const sundayInviteRequestSchema = z.object({ code: z.string().trim().min(3).max(80).regex(/^[a-z0-9]+_[a-z0-9]+$/) }).strict();
+export const sundayFastRegistrationRequestSchema = z.object({
+  name: text,
+  nickname: z.string().trim().min(1).max(40),
+  dojo: text,
+  practiceYears: z.number().int().min(0).max(100),
+  dan: z.enum(KENSHI_DAN_LEVELS),
+}).strict();
 
 export const sundaySessionSchema = z.object({
   sessionId: uuid,
@@ -35,6 +43,7 @@ export const sundayLobbyCardSchema = z.object({
   profileId: uuid,
   dojo: text,
   name: text,
+  nickname: z.string().trim().min(1).max(40),
   card: sundayCardSchema,
 }).strict();
 
@@ -94,6 +103,7 @@ export const sundayDaihyoRequestSchema = z.object({ matchId: uuid, akaProfileId:
 
 export type SundayCard = z.infer<typeof sundayCardSchema>;
 export type SundayProfile = z.infer<typeof sundayProfileSchema>;
+export type SundayFastRegistrationRequest = z.infer<typeof sundayFastRegistrationRequestSchema>;
 export type SundayLobby = z.infer<typeof sundayLobbySchema>;
 export type SundayGameState = z.infer<typeof sundayGameStateSchema>;
 export type SundayHostConsole = z.infer<typeof sundayHostConsoleSchema>;

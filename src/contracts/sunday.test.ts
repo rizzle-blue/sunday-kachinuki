@@ -1,10 +1,27 @@
 import { describe, expect, test } from "bun:test";
-import { sundayInviteRequestSchema, sundayScoreEventRequestSchema } from "./sunday";
+import { sundayFastRegistrationRequestSchema, sundayInviteRequestSchema, sundayScoreEventRequestSchema } from "./sunday";
 
 describe("Sunday Kachinuki contracts", () => {
   test("accepts a normalized reusable invite code", () => {
     expect(sundayInviteRequestSchema.parse({ code: "one_demo" })).toEqual({ code: "one_demo" });
     expect(sundayInviteRequestSchema.safeParse({ code: "One Demo" }).success).toBe(false);
+  });
+
+  test("validates the minimal fast-registration profile", () => {
+    expect(sundayFastRegistrationRequestSchema.parse({
+      name: "Nguyen Thi Cam Tu",
+      nickname: "Tu",
+      dojo: "Shakaijin",
+      practiceYears: 1,
+      dan: "under_1_dan",
+    })).toEqual({
+      name: "Nguyen Thi Cam Tu",
+      nickname: "Tu",
+      dojo: "Shakaijin",
+      practiceYears: 1,
+      dan: "under_1_dan",
+    });
+    expect(sundayFastRegistrationRequestSchema.safeParse({ name: "Tu", nickname: "", dojo: "Shakaijin", practiceYears: -1, dan: "9_dan" }).success).toBe(false);
   });
 
   test("requires waza only for an ippon point", () => {

@@ -1,9 +1,11 @@
 import {
+  sundayFastRegistrationRequestSchema,
   sundayGameStateSchema,
   sundayHostConsoleSchema,
   sundayLobbySchema,
   sundayProfileSchema,
   type SundayGameState,
+  type SundayFastRegistrationRequest,
   type SundayHostConsole,
   type SundayLobby,
   type SundayProfile,
@@ -39,6 +41,18 @@ export function normalizeInviteCode(value: string): string {
 
 export async function redeemInvite(code: string): Promise<SundayProfile> {
   const profile = rawProfileSchema.parse(await rpc("redeem_sunday_invite", { p_code: normalizeInviteCode(code) }));
+  return sundayProfileSchema.parse({ ...profile, card: card(profile.profileId) });
+}
+
+export async function registerProfile(input: SundayFastRegistrationRequest): Promise<SundayProfile> {
+  const registration = sundayFastRegistrationRequestSchema.parse(input);
+  const profile = rawProfileSchema.parse(await rpc("register_sunday_profile", {
+    p_name: registration.name,
+    p_nickname: registration.nickname,
+    p_dojo: registration.dojo,
+    p_practice_years: registration.practiceYears,
+    p_dan: registration.dan,
+  }));
   return sundayProfileSchema.parse({ ...profile, card: card(profile.profileId) });
 }
 

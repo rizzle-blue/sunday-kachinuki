@@ -1,8 +1,13 @@
 # Sunday Kachinuki
 
 A small, mobile-first Team-3 kachinuki game for one court. Participants redeem
-an invite, reveal a deterministic Battle Card, enter the lobby, and rotate
-through a lightweight survivor loop. One host also records points and hansoku.
+an invite or create a fast profile, reveal a deterministic Battle Card, enter
+the lobby, and rotate through a lightweight survivor loop. One host also
+records points and hansoku.
+
+Roster names are normalized to ASCII for this event. Invite codes use
+`given-name_family-name`, for example `Nguyen Thi Cam Tu` becomes `tu_nguyen`.
+Fast registration only asks for name, nickname, dojo, practice years, and Dan.
 
 ## Privacy boundary
 
@@ -58,8 +63,9 @@ Do not use `--include-seed` for production: the tracked `supabase/seed.sql` is
 synthetic. Apply the private production roster separately after reviewing its
 exact target project.
 
-Enable anonymous sign-ins and invisible Turnstile in the dedicated project.
-Create the host email/password user manually, then register its Auth UUID:
+Enable anonymous sign-ins in the dedicated project. Turnstile is optional for
+this small trusted-group test. Create the host email/password user manually,
+then register its Auth UUID:
 
 ```sql
 insert into sunday_private.operators(auth_subject_id, role)
@@ -79,8 +85,9 @@ SUPABASE_URL
 SUPABASE_PUBLISHABLE_KEY
 VITE_SUPABASE_URL
 VITE_SUPABASE_PUBLISHABLE_KEY
-VITE_TURNSTILE_SITE_KEY
 ```
+
+Only add `VITE_TURNSTILE_SITE_KEY` if Turnstile is enabled.
 
 The server/browser URL and publishable-key pairs must match. Never configure a
 service-role or secret key in Vercel.

@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { HeadContent, Link, Outlet, Scripts, createRootRoute } from "@tanstack/react-router";
 import styles from "../styles.css?url";
+import { MenMark } from "@/components/men-mark";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -19,7 +20,7 @@ export const Route = createRootRoute({
 });
 
 function Root() {
-  return <Document><header className="site-header shell"><Link className="brand" to="/">Sunday Kachinuki</Link><Link className="host-link" to="/host">Host</Link></header><Outlet /></Document>;
+  return <Document><header className="site-header shell"><Link className="brand" to="/"><MenMark className="brand-mark" /><span>Sunday Kachinuki</span></Link><Link className="host-link" to="/host">Host</Link></header><Outlet /></Document>;
 }
 
 function Document({ children }: Readonly<{ children: ReactNode }>) {

@@ -14,6 +14,7 @@ insert into sunday_private.kenshi_profiles(
   source_roster_id,
   dojo,
   name,
+  nickname,
   dan,
   practice_years
 )
@@ -22,12 +23,14 @@ select
   'SUNDAY-' || lpad(source_number::text, 3, '0'),
   dojo,
   name,
+  name,
   dan,
   practice_years
 from demo_profiles
 on conflict (source_roster_id) do update set
   dojo = excluded.dojo,
   name = excluded.name,
+  nickname = excluded.nickname,
   dan = excluded.dan,
   practice_years = excluded.practice_years,
   updated_at = now();
