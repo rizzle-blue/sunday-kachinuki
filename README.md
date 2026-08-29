@@ -38,6 +38,10 @@ bun run test:e2e
 bun run check
 ```
 
+`bun run check` uses the isolated local Supabase publishable configuration.
+`bun run build` is the hosted build and intentionally requires the Vercel
+environment variables listed below.
+
 ## Dedicated Supabase deployment
 
 Create a new Supabase project used only by this app, then review and apply the

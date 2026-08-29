@@ -7,10 +7,11 @@
   "scripts": {
     "dev": "bun --no-env-file scripts/run-web.ts dev",
     "build": "bun scripts/deploy-guard.ts && vite build",
+    "build:local": "bun --no-env-file scripts/run-web.ts build",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint .",
     "test": "bun test src scripts",
-    "check": "bun run lint && bun run typecheck && bun run test && bun run build",
+    "check": "bun run lint && bun run typecheck && bun run test && bun run build:local",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:status": "supabase status",
