@@ -1,0 +1,21 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.DS_Store
+dist/
+.vite/
+.tanstack/
+.output/
+.vercel/
+playwright-report/
+test-results/
+supabase/.temp/
+supabase/.branches/
+*.tsbuildinfo
+
+# Private event data must never enter the public repository.
+.private/
+*.private.sql
+roster*.csv
+supabase/seed.production.sql
