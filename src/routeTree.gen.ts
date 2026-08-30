@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as HostRouteImport } from './routes/host'
 import { Route as LobbyRouteImport } from './routes/lobby'
 import { Route as ProfileRouteImport } from './routes/profile'
+import { Route as SimulateRouteImport } from './routes/simulate'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const ProfileRoute = ProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SimulateRoute = SimulateRouteImport.update({
+  id: '/simulate',
+  path: '/simulate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/host': typeof HostRoute
   '/lobby': typeof LobbyRoute
   '/profile': typeof ProfileRoute
+  '/simulate': typeof SimulateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/host': typeof HostRoute
   '/lobby': typeof LobbyRoute
   '/profile': typeof ProfileRoute
+  '/simulate': typeof SimulateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/host': typeof HostRoute
   '/lobby': typeof LobbyRoute
   '/profile': typeof ProfileRoute
+  '/simulate': typeof SimulateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/host' | '/lobby' | '/profile'
+  fullPaths: '/' | '/host' | '/lobby' | '/profile' | '/simulate'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/host' | '/lobby' | '/profile'
-  id: '__root__' | '/' | '/host' | '/lobby' | '/profile'
+  to: '/' | '/host' | '/lobby' | '/profile' | '/simulate'
+  id: '__root__' | '/' | '/host' | '/lobby' | '/profile' | '/simulate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   HostRoute: typeof HostRoute
   LobbyRoute: typeof LobbyRoute
   ProfileRoute: typeof ProfileRoute
+  SimulateRoute: typeof SimulateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/simulate': {
+      id: '/simulate'
+      path: '/simulate'
+      fullPath: '/simulate'
+      preLoaderRoute: typeof SimulateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   HostRoute: HostRoute,
   LobbyRoute: LobbyRoute,
   ProfileRoute: ProfileRoute,
+  SimulateRoute: SimulateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
