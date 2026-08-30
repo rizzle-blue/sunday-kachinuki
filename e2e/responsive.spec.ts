@@ -21,18 +21,23 @@ for (const viewport of VIEWPORTS) {
   });
 }
 
-test("anonymous invite reveals card and sticky Ready action on mobile", async ({ page }) => {
+test("anonymous invite reveals card with adjacent Ready and Logout actions on mobile", async ({ page }) => {
   const browserErrors: string[] = [];
   page.on("pageerror", (error) => browserErrors.push(error.message));
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Reveal my card" })).toBeEnabled();
+  await expect(page.getByLabel("Invite code")).toHaveAttribute("placeholder", "ten_ho · không dấu, viết thường");
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
   await page.getByLabel("Invite code").fill("one_demo");
   await page.getByRole("button", { name: "Reveal my card" }).click();
   await page.waitForURL("**/profile");
   await expect(page.getByRole("heading", { name: "Demo Kenshi One" })).toBeVisible();
   await expect(page.getByRole("article").getByText("Lucky waza")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Ready · Join the lobby" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Ready · Join lobby" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.getByRole("button", { name: "Logout" }).click();
+  await page.waitForURL("**/");
+  await expect(page.getByRole("button", { name: "Reveal my card" })).toBeVisible();
 });

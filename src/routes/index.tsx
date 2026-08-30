@@ -113,7 +113,7 @@ function Entrance() {
     event.preventDefault();
     if (busy) return;
     const code = normalizeInviteCode(String(new FormData(event.currentTarget).get("invite") ?? ""));
-    if (!/^[a-z0-9]+_[a-z0-9]+$/.test(code)) { setError("Code có dạng tu_nguyen."); return; }
+    if (!/^[a-z0-9]+_[a-z0-9]+$/.test(code)) { setError("Code gồm tên_họ, viết thường và không dấu."); return; }
     queue({ kind: "invite", code });
   }
 
@@ -155,7 +155,7 @@ function Entrance() {
           </div>
           {mode === "invite" ? (
             <form className="stack" onSubmit={submitInvite}>
-              <div className="field"><label htmlFor="invite">Invite code</label><input className="input" id="invite" name="invite" placeholder="tu_nguyen" autoCapitalize="none" autoCorrect="off" spellCheck={false} required disabled={busy} /></div>
+              <div className="field"><label htmlFor="invite">Invite code</label><input className="input" id="invite" name="invite" placeholder="ten_ho · không dấu, viết thường" autoCapitalize="none" autoCorrect="off" spellCheck={false} required disabled={busy} /></div>
               <button className="button" type="submit" disabled={busy || !hydrated}>{busy ? "Đang mở cổng…" : "Reveal my card"}</button>
             </form>
           ) : (

@@ -96,6 +96,11 @@ export async function ensureAnonymousSession(captchaToken?: string): Promise<voi
   if (error) throw new SundayApiError(error.code ?? "auth_failed", error.message);
 }
 
+export async function signOut(): Promise<void> {
+  const { error } = await getSundaySupabase().auth.signOut({ scope: "local" });
+  if (error) throw new SundayApiError(error.code ?? "auth_failed", error.message);
+}
+
 export async function hostSignIn(email: string, password: string): Promise<void> {
   const { error } = await getSundaySupabase().auth.signInWithPassword({ email, password });
   if (error) throw new SundayApiError(error.code ?? "auth_failed", error.message);
