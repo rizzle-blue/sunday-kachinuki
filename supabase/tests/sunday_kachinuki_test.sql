@@ -1,5 +1,5 @@
 begin;
-select plan(47);
+select plan(56);
 
 select has_table('sunday_private', 'kenshi_profiles', 'Sunday profiles use standalone private storage');
 select has_table('sunday_private', 'game_sessions', 'Sunday owns an isolated game session');
@@ -13,6 +13,7 @@ select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid
 select ok(not has_table_privilege('authenticated','sunday_private.kenshi_profiles','select'), 'authenticated callers cannot bypass profile RPCs');
 select ok(not has_function_privilege('anon','public.redeem_sunday_invite(text)'::regprocedure,'execute'), 'unauthenticated callers cannot redeem an invite');
 select ok(to_regprocedure('public.register_sunday_profile(text,text,text,integer,text)') is not null, 'fast registration is exposed through one narrow RPC');
+select ok(to_regprocedure('public.kick_sunday_ready(uuid,integer,uuid)') is not null, 'host kick-ready is exposed through one narrow RPC');
 select ok(not has_function_privilege('anon','public.register_sunday_profile(text,text,text,integer,text)'::regprocedure,'execute'), 'unauthenticated callers cannot fast register');
 select hasnt_table('public','kenshi_profiles','profile storage is not exposed as a public table');
 
@@ -86,8 +87,35 @@ select is((select count(*) from sunday_private.session_entries),6::bigint,'Ready
 
 select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000099',true);
 set local role authenticated;
+select is(jsonb_array_length(public.get_sunday_host_console()->'readyEntries'),6,'host console lists six removable Ready entries');
+select set_config('sunday.kick_profile',public.get_sunday_host_console()->'readyEntries'->0->>'profileId',true);
+select set_config('sunday.kick_version',public.get_sunday_host_console()->'readyEntries'->0->>'version',true);
+reset role;
+select set_config('sunday.kick_subject',(select auth_subject_id::text from sunday_private.profile_sessions where profile_id=current_setting('sunday.kick_profile')::uuid limit 1),true);
+
+select set_config('request.jwt.claim.sub',current_setting('sunday.kick_subject'),true);
+set local role authenticated;
+select throws_ok(format($$ select public.kick_sunday_ready(%L,%s,'96000000-0000-4000-8000-000000000001') $$,current_setting('sunday.kick_profile'),current_setting('sunday.kick_version')),'42501','42501','participant cannot kick a Ready Kenshi');
+reset role;
+
+select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000099',true);
+set local role authenticated;
+select lives_ok(format($$ select public.kick_sunday_ready(%L,%s,'96000000-0000-4000-8000-000000000002') $$,current_setting('sunday.kick_profile'),current_setting('sunday.kick_version')),'host kicks a Ready Kenshi');
+select lives_ok(format($$ select public.kick_sunday_ready(%L,%s,'96000000-0000-4000-8000-000000000002') $$,current_setting('sunday.kick_profile'),current_setting('sunday.kick_version')),'kick retry returns the original receipt');
+reset role;
+select is((select count(*) from sunday_private.session_entries),5::bigint,'kick removes exactly one session entry');
+
+select set_config('request.jwt.claim.sub',current_setting('sunday.kick_subject'),true);
+set local role authenticated;
+select lives_ok($$ select public.set_sunday_ready(true,'96000000-0000-4000-8000-000000000003') $$,'kicked Kenshi can become Ready again');
+reset role;
+select is((select count(*) from sunday_private.session_entries),6::bigint,'Ready count returns to six after rejoin');
+
+select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000099',true);
+set local role authenticated;
 select throws_ok($$ select public.redeem_sunday_invite('one_demo') $$,'23514','23514','host cannot redeem a participant invite');
 select lives_ok($$ select public.start_sunday_session('95000000-0000-4000-8000-000000000001') $$,'host starts exact-six formation');
+select throws_ok(format($$ select public.kick_sunday_ready(%L,1,'96000000-0000-4000-8000-000000000004') $$,public.get_sunday_host_console()->'currentMatch'->'akaTeam'->'members'->0->>'profileId'),'40001','40001','host cannot kick an assigned Kenshi');
 reset role;
 
 select is((select count(*) from sunday_private.teams where state='active'),2::bigint,'exact-six start creates two active Team-3 rosters');

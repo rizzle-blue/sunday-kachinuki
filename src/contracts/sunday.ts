@@ -86,6 +86,14 @@ export const sundayGameStateSchema = z.object({
 export const sundayHostConsoleSchema = z.object({
   session: sundaySessionSchema,
   waitingCount: z.number().int().nonnegative(),
+  readyEntries: z.array(z.object({
+    profileId: uuid,
+    name: text,
+    nickname: z.string().trim().min(1).max(40),
+    dojo: text,
+    state: z.enum(["ready", "waiting"]),
+    version: z.number().int().positive(),
+  }).strict()),
   currentMatch: sundayMatchSchema.nullable(),
 }).strict();
 

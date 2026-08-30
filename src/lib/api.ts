@@ -86,6 +86,7 @@ export async function getHostConsole(): Promise<SundayHostConsole> {
 
 export async function startSession(): Promise<void> { await hostRpc("start_sunday_session", { p_idempotency_key: crypto.randomUUID() }); }
 export async function stopSession(): Promise<void> { await hostRpc("stop_sunday_session", { p_idempotency_key: crypto.randomUUID() }); }
+export async function kickReady(profileId: string, expectedVersion: number): Promise<void> { await hostRpc("kick_sunday_ready", { p_profile: profileId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
 export async function startBout(boutId: string, expectedVersion: number): Promise<void> { await hostRpc("start_sunday_bout", { p_bout: boutId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
 export async function recordEvent(input: Readonly<{ boutId: string; expectedVersion: number; kind: "point" | "hansoku"; side: "aka" | "shiro"; waza: "men" | "kote" | "do" | "tsuki" | null }>): Promise<void> {
   await hostRpc("record_sunday_event", { p_bout: input.boutId, p_expected_version: input.expectedVersion, p_idempotency_key: crypto.randomUUID(), p_kind: input.kind, p_side: input.side, p_waza: input.waza });

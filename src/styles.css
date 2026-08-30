@@ -120,6 +120,14 @@ button:active:not(:disabled), a:active { transform: translateY(1px); }
 .aka .score-button { border-color: var(--aka); background: var(--aka); }
 .score-button.hansoku { background: transparent; color: var(--sumi-soft); }
 .operator-actions { display: grid; gap: .65rem; margin-top: 1rem; }
+.button.compact { min-height: 44px; padding: .5rem .75rem; font-size: .76rem; }
+.ready-list { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.ready-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .75rem; align-items: center; border-top: 1px solid var(--border); padding-top: .75rem; }
+.ready-list li > div:first-child { min-width: 0; }
+.ready-list strong, .ready-list span, .ready-list small { display: block; overflow-wrap: anywhere; }
+.ready-list span { color: rgb(43 38 32 / 72%); font-size: .76rem; }
+.ready-list small { color: var(--green); font-size: .66rem; font-weight: 700; text-transform: uppercase; }
+.ready-actions { display: grid; gap: .4rem; }
 .simulator-lead { max-width: 48rem; }
 .simulator-feedback { min-height: 1.5rem; margin: 0 0 1.25rem; color: var(--green); font-weight: 600; }
 .simulator-start .button, .simulator-result .button { width: 100%; }
