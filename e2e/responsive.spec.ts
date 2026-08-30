@@ -28,6 +28,12 @@ test("anonymous invite reveals card with adjacent Ready and Logout actions on mo
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Reveal my card" })).toBeEnabled();
   await expect(page.getByLabel("Invite code")).toHaveAttribute("placeholder", "ten_ho · không dấu, viết thường");
+  await page.getByRole("tab", { name: "Register" }).click();
+  await expect(page.getByLabel("Họ và tên")).toHaveAttribute("placeholder", "e.g: Nguyen Thi Cam Tu");
+  await expect(page.getByLabel("Nickname")).toHaveAttribute("placeholder", "e.g: Tu");
+  await expect(page.getByLabel("Dojo")).toHaveAttribute("placeholder", "e.g: Shakaijin");
+  await expect(page.getByLabel("Số năm tập")).toHaveAttribute("placeholder", "e.g: 2");
+  await page.getByRole("tab", { name: "Invite code" }).click();
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
   await page.getByLabel("Invite code").fill("one_demo");
   await page.getByRole("button", { name: "Reveal my card" }).click();
@@ -37,6 +43,11 @@ test("anonymous invite reveals card with adjacent Ready and Logout actions on mo
   await expect(page.getByRole("button", { name: "Ready · Join lobby" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Logout" })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Reveal my card" })).toBeVisible();
+  await page.waitForTimeout(500);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/profile");
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL("**/");
   await expect(page.getByRole("button", { name: "Reveal my card" })).toBeVisible();

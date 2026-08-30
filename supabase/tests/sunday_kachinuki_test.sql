@@ -1,5 +1,5 @@
 begin;
-select plan(41);
+select plan(44);
 
 select has_table('sunday_private', 'kenshi_profiles', 'Sunday profiles use standalone private storage');
 select has_table('sunday_private', 'game_sessions', 'Sunday owns an isolated game session');
@@ -28,11 +28,25 @@ from unnest(array[1,2,3,4,5,6,7,8,99]) number;
 insert into sunday_private.operators(auth_subject_id,role)
 values('93000000-0000-4000-8000-000000000099','host_recorder');
 
+select throws_ok(
+  $$ insert into sunday_private.profile_sessions(profile_id,auth_subject_id) values('91000000-0000-4000-8000-000000000001','93000000-0000-4000-8000-000000000099') $$,
+  '23514',
+  '23514',
+  'host Auth subject cannot link to a Kenshi profile'
+);
+
 select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000001',true);
 set local role authenticated;
 select is(public.redeem_sunday_invite('one_demo')->>'name','Demo Kenshi One','invite redirects to the matching profile');
 select lives_ok($$ select public.set_sunday_ready(true,'94000000-0000-4000-8000-000000000001') $$,'first Kenshi becomes Ready');
 reset role;
+
+select throws_ok(
+  $$ insert into sunday_private.operators(auth_subject_id,role) values('93000000-0000-4000-8000-000000000001','host_recorder') $$,
+  '23514',
+  '23514',
+  'Kenshi Auth subject cannot become a host operator'
+);
 
 select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000008',true);
 set local role authenticated;
@@ -67,6 +81,7 @@ select is((select count(*) from sunday_private.session_entries),6::bigint,'Ready
 
 select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000099',true);
 set local role authenticated;
+select throws_ok($$ select public.redeem_sunday_invite('one_demo') $$,'23514','23514','host cannot redeem a participant invite');
 select lives_ok($$ select public.start_sunday_session('95000000-0000-4000-8000-000000000001') $$,'host starts exact-six formation');
 reset role;
 

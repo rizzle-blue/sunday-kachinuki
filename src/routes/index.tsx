@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MenMark } from "@/components/men-mark";
-import { ensureAnonymousSession, getProfile, normalizeInviteCode, redeemInvite, registerProfile } from "@/lib/api";
+import { ensureAnonymousSession, normalizeInviteCode, redeemInvite, registerProfile } from "@/lib/api";
 
 declare global {
   interface Window {
@@ -44,8 +44,6 @@ function Entrance() {
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   useEffect(() => setHydrated(true), []);
-  useEffect(() => { void getProfile().then(() => window.location.assign("/profile")).catch(() => undefined); }, []);
-
   useEffect(() => {
     if (!siteKey || !widgetRoot.current) return;
     const render = () => {
@@ -151,7 +149,7 @@ function Entrance() {
         <section className="panel entrance-panel">
           <div className="segmented" role="tablist" aria-label="Cách vào Sunday Kachinuki">
             <button type="button" role="tab" aria-selected={mode === "invite"} className={mode === "invite" ? "active" : ""} onClick={() => selectMode("invite")}>Invite code</button>
-            <button type="button" role="tab" aria-selected={mode === "register"} className={mode === "register" ? "active" : ""} onClick={() => selectMode("register")}>Fast register</button>
+            <button type="button" role="tab" aria-selected={mode === "register"} className={mode === "register" ? "active" : ""} onClick={() => selectMode("register")}>Register</button>
           </div>
           {mode === "invite" ? (
             <form className="stack" onSubmit={submitInvite}>
@@ -161,10 +159,10 @@ function Entrance() {
           ) : (
             <form className="stack" onSubmit={submitRegistration}>
               <div className="register-grid">
-                <div className="field register-wide"><label htmlFor="name">Họ và tên</label><input className="input" id="name" name="name" placeholder="Nguyen Thi Cam Tu" maxLength={120} required disabled={busy} /></div>
-                <div className="field"><label htmlFor="nickname">Nickname</label><input className="input" id="nickname" name="nickname" placeholder="Tu" maxLength={40} required disabled={busy} /></div>
-                <div className="field"><label htmlFor="dojo">Dojo</label><input className="input" id="dojo" name="dojo" placeholder="Shakaijin" maxLength={120} required disabled={busy} /></div>
-                <div className="field"><label htmlFor="practiceYears">Số năm tập</label><input className="input" id="practiceYears" name="practiceYears" type="number" inputMode="numeric" min={0} max={100} step={1} placeholder="2" required disabled={busy} /></div>
+                <div className="field register-wide"><label htmlFor="name">Họ và tên</label><input className="input" id="name" name="name" placeholder="e.g: Nguyen Thi Cam Tu" maxLength={120} required disabled={busy} /></div>
+                <div className="field"><label htmlFor="nickname">Nickname</label><input className="input" id="nickname" name="nickname" placeholder="e.g: Tu" maxLength={40} required disabled={busy} /></div>
+                <div className="field"><label htmlFor="dojo">Dojo</label><input className="input" id="dojo" name="dojo" placeholder="e.g: Shakaijin" maxLength={120} required disabled={busy} /></div>
+                <div className="field"><label htmlFor="practiceYears">Số năm tập</label><input className="input" id="practiceYears" name="practiceYears" type="number" inputMode="numeric" min={0} max={100} step={1} placeholder="e.g: 2" required disabled={busy} /></div>
                 <div className="field"><label htmlFor="dan">Dan</label><select className="select" id="dan" name="dan" defaultValue="under_1_dan" required disabled={busy}>{DAN_OPTIONS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></div>
               </div>
               <p className="form-note">Tên có dấu sẽ tự chuyển về không dấu để dễ quản lý đội hình.</p>

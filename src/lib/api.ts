@@ -12,7 +12,7 @@ import {
 } from "@/contracts/sunday";
 import { sundayBattleCard } from "@/domain/sunday";
 import { z } from "zod";
-import { getSundaySupabase } from "./supabase";
+import { getSundayHostSupabase, getSundaySupabase } from "./supabase";
 
 const rawProfileSchema = sundayProfileSchema.omit({ card: true });
 const rawLobbySchema = z.object({
@@ -27,6 +27,12 @@ export class SundayApiError extends Error {
 
 async function rpc(name: string, args: Record<string, unknown> = {}): Promise<unknown> {
   const { data, error } = await getSundaySupabase().rpc(name, args);
+  if (error) throw new SundayApiError(error.code ?? "unknown");
+  return data;
+}
+
+async function hostRpc(name: string, args: Record<string, unknown> = {}): Promise<unknown> {
+  const { data, error } = await getSundayHostSupabase().rpc(name, args);
   if (error) throw new SundayApiError(error.code ?? "unknown");
   return data;
 }
@@ -75,18 +81,18 @@ export async function getGame(): Promise<SundayGameState> {
 }
 
 export async function getHostConsole(): Promise<SundayHostConsole> {
-  return sundayHostConsoleSchema.parse(await rpc("get_sunday_host_console"));
+  return sundayHostConsoleSchema.parse(await hostRpc("get_sunday_host_console"));
 }
 
-export async function startSession(): Promise<void> { await rpc("start_sunday_session", { p_idempotency_key: crypto.randomUUID() }); }
-export async function stopSession(): Promise<void> { await rpc("stop_sunday_session", { p_idempotency_key: crypto.randomUUID() }); }
-export async function startBout(boutId: string, expectedVersion: number): Promise<void> { await rpc("start_sunday_bout", { p_bout: boutId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
+export async function startSession(): Promise<void> { await hostRpc("start_sunday_session", { p_idempotency_key: crypto.randomUUID() }); }
+export async function stopSession(): Promise<void> { await hostRpc("stop_sunday_session", { p_idempotency_key: crypto.randomUUID() }); }
+export async function startBout(boutId: string, expectedVersion: number): Promise<void> { await hostRpc("start_sunday_bout", { p_bout: boutId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
 export async function recordEvent(input: Readonly<{ boutId: string; expectedVersion: number; kind: "point" | "hansoku"; side: "aka" | "shiro"; waza: "men" | "kote" | "do" | "tsuki" | null }>): Promise<void> {
-  await rpc("record_sunday_event", { p_bout: input.boutId, p_expected_version: input.expectedVersion, p_idempotency_key: crypto.randomUUID(), p_kind: input.kind, p_side: input.side, p_waza: input.waza });
+  await hostRpc("record_sunday_event", { p_bout: input.boutId, p_expected_version: input.expectedVersion, p_idempotency_key: crypto.randomUUID(), p_kind: input.kind, p_side: input.side, p_waza: input.waza });
 }
-export async function undoEvent(boutId: string, expectedVersion: number): Promise<void> { await rpc("undo_sunday_event", { p_bout: boutId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
-export async function finalizeBout(boutId: string, expectedVersion: number): Promise<void> { await rpc("finalize_sunday_bout", { p_bout: boutId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
-export async function createDaihyo(matchId: string, akaProfileId: string, shiroProfileId: string): Promise<void> { await rpc("create_sunday_daihyo", { p_match: matchId, p_aka_profile: akaProfileId, p_shiro_profile: shiroProfileId, p_idempotency_key: crypto.randomUUID() }); }
+export async function undoEvent(boutId: string, expectedVersion: number): Promise<void> { await hostRpc("undo_sunday_event", { p_bout: boutId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
+export async function finalizeBout(boutId: string, expectedVersion: number): Promise<void> { await hostRpc("finalize_sunday_bout", { p_bout: boutId, p_expected_version: expectedVersion, p_idempotency_key: crypto.randomUUID() }); }
+export async function createDaihyo(matchId: string, akaProfileId: string, shiroProfileId: string): Promise<void> { await hostRpc("create_sunday_daihyo", { p_match: matchId, p_aka_profile: akaProfileId, p_shiro_profile: shiroProfileId, p_idempotency_key: crypto.randomUUID() }); }
 
 export async function ensureAnonymousSession(captchaToken?: string): Promise<void> {
   const client = getSundaySupabase();
@@ -102,6 +108,6 @@ export async function signOut(): Promise<void> {
 }
 
 export async function hostSignIn(email: string, password: string): Promise<void> {
-  const { error } = await getSundaySupabase().auth.signInWithPassword({ email, password });
+  const { error } = await getSundayHostSupabase().auth.signInWithPassword({ email, password });
   if (error) throw new SundayApiError(error.code ?? "auth_failed", error.message);
 }
