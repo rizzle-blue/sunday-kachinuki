@@ -1,0 +1,5 @@
+-- A production-only result correction was applied to the dedicated Sunday
+-- database under this migration version. Participant names and database UUIDs
+-- are intentionally omitted because this repository is public.
+--
+-- Fresh projects do not contain that completed event data and need no change.
