@@ -4,11 +4,13 @@ import {
   sundayHostConsoleSchema,
   sundayLobbySchema,
   sundayProfileSchema,
+  sundayResultSchema,
   type SundayGameState,
   type SundayFastRegistrationRequest,
   type SundayHostConsole,
   type SundayLobby,
   type SundayProfile,
+  type SundayResult,
 } from "@/contracts/sunday";
 import { sundayBattleCard } from "@/domain/sunday";
 import { z } from "zod";
@@ -78,6 +80,10 @@ export async function getLobby(): Promise<SundayLobby> {
 
 export async function getGame(): Promise<SundayGameState> {
   return sundayGameStateSchema.parse(await rpc("get_sunday_game"));
+}
+
+export async function getResult(): Promise<SundayResult> {
+  return sundayResultSchema.parse(await rpc("get_my_sunday_result"));
 }
 
 export async function getHostConsole(): Promise<SundayHostConsole> {

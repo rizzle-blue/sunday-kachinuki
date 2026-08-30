@@ -6,6 +6,22 @@ export const SUNDAY_WAZA = ["men", "kote", "do", "tsuki"] as const;
 export type SundayWaza = (typeof SUNDAY_WAZA)[number];
 export type SundaySide = "aka" | "shiro";
 
+export function sundayProfileSlug(name: string): string {
+  const parts = name
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll("đ", "d")
+    .replaceAll("Đ", "D")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter(Boolean);
+  const familyName = parts[0];
+  const givenName = parts.at(-1);
+  if (!familyName || !givenName) return "kenshi";
+  return familyName === givenName ? familyName : `${givenName}_${familyName}`;
+}
+
 export type SundayBattleCard = Readonly<{
   codename: string;
   aura: string;

@@ -14,6 +14,7 @@ import { Route as HostRouteImport } from './routes/host'
 import { Route as LobbyRouteImport } from './routes/lobby'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as SimulateRouteImport } from './routes/simulate'
+import { Route as ProfileUserSlugIndividualsRouteImport } from './routes/profile_.$userSlug.individuals'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -40,6 +41,12 @@ const SimulateRoute = SimulateRouteImport.update({
   path: '/simulate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfileUserSlugIndividualsRoute =
+  ProfileUserSlugIndividualsRouteImport.update({
+    id: '/profile_/$userSlug/individuals',
+    path: '/profile/$userSlug/individuals',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +54,7 @@ export interface FileRoutesByFullPath {
   '/lobby': typeof LobbyRoute
   '/profile': typeof ProfileRoute
   '/simulate': typeof SimulateRoute
+  '/profile/$userSlug/individuals': typeof ProfileUserSlugIndividualsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +62,7 @@ export interface FileRoutesByTo {
   '/lobby': typeof LobbyRoute
   '/profile': typeof ProfileRoute
   '/simulate': typeof SimulateRoute
+  '/profile/$userSlug/individuals': typeof ProfileUserSlugIndividualsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,13 +71,33 @@ export interface FileRoutesById {
   '/lobby': typeof LobbyRoute
   '/profile': typeof ProfileRoute
   '/simulate': typeof SimulateRoute
+  '/profile_/$userSlug/individuals': typeof ProfileUserSlugIndividualsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/host' | '/lobby' | '/profile' | '/simulate'
+  fullPaths:
+    | '/'
+    | '/host'
+    | '/lobby'
+    | '/profile'
+    | '/simulate'
+    | '/profile/$userSlug/individuals'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/host' | '/lobby' | '/profile' | '/simulate'
-  id: '__root__' | '/' | '/host' | '/lobby' | '/profile' | '/simulate'
+  to:
+    | '/'
+    | '/host'
+    | '/lobby'
+    | '/profile'
+    | '/simulate'
+    | '/profile/$userSlug/individuals'
+  id:
+    | '__root__'
+    | '/'
+    | '/host'
+    | '/lobby'
+    | '/profile'
+    | '/simulate'
+    | '/profile_/$userSlug/individuals'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -77,6 +106,7 @@ export interface RootRouteChildren {
   LobbyRoute: typeof LobbyRoute
   ProfileRoute: typeof ProfileRoute
   SimulateRoute: typeof SimulateRoute
+  ProfileUserSlugIndividualsRoute: typeof ProfileUserSlugIndividualsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -116,6 +146,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SimulateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/profile_/$userSlug/individuals': {
+      id: '/profile_/$userSlug/individuals'
+      path: '/profile/$userSlug/individuals'
+      fullPath: '/profile/$userSlug/individuals'
+      preLoaderRoute: typeof ProfileUserSlugIndividualsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -125,6 +162,7 @@ const rootRouteChildren: RootRouteChildren = {
   LobbyRoute: LobbyRoute,
   ProfileRoute: ProfileRoute,
   SimulateRoute: SimulateRoute,
+  ProfileUserSlugIndividualsRoute: ProfileUserSlugIndividualsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

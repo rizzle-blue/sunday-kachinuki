@@ -1,7 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { proposeSundayFormation, reduceSundayScore, selectSundayCourtMatch, sundayBattleCard, sundaySurvivorPolicy, sundayTeamWinner } from "./sunday";
+import { proposeSundayFormation, reduceSundayScore, selectSundayCourtMatch, sundayBattleCard, sundayProfileSlug, sundaySurvivorPolicy, sundayTeamWinner } from "./sunday";
 
 describe("Sunday Kachinuki domain", () => {
+  test("builds the canonical profile slug from given and family names", () => {
+    expect(sundayProfileSlug("Nguyễn Thị Cẩm Tú")).toBe("tu_nguyen");
+    expect(sundayProfileSlug("Huy Sting")).toBe("sting_huy");
+  });
+
   test("forms only complete Team-3 rosters for six through ten Kenshi", () => {
     for (let count = 6; count <= 10; count += 1) {
       const result = proposeSundayFormation(Array.from({ length: count }, (_, index) => `p${index}`), 31);

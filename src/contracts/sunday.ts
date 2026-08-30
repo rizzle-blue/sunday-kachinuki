@@ -83,6 +83,52 @@ export const sundayGameStateSchema = z.object({
   currentMatch: sundayMatchSchema.nullable(),
 }).strict();
 
+const sundayResultWazaSchema = z.object({
+  men: z.number().int().nonnegative(),
+  kote: z.number().int().nonnegative(),
+  do: z.number().int().nonnegative(),
+  tsuki: z.number().int().nonnegative(),
+}).strict();
+
+export const sundayResultSchema = z.object({
+  session: z.object({
+    sessionId: uuid,
+    name: text,
+    startedAt: z.string().datetime({ offset: true }),
+    completedAt: z.string().datetime({ offset: true }),
+    durationMinutes: z.number().nonnegative(),
+  }).strict(),
+  summary: z.object({
+    matchesPlayed: z.number().int().nonnegative(),
+    formationCount: z.number().int().nonnegative(),
+    teamWins: z.number().int().nonnegative(),
+    teamLosses: z.number().int().nonnegative(),
+    winRate: z.number().min(0).max(100),
+    boutsFought: z.number().int().nonnegative(),
+    boutWins: z.number().int().nonnegative(),
+    boutLosses: z.number().int().nonnegative(),
+    boutDraws: z.number().int().nonnegative(),
+    ipponScored: z.number().int().nonnegative(),
+    ipponConceded: z.number().int().nonnegative(),
+    hansoku: z.number().int().nonnegative(),
+    pointsByWaza: sundayResultWazaSchema,
+    excludedMatches: z.number().int().nonnegative(),
+  }).strict(),
+  history: z.array(z.object({
+    matchSequence: z.number().int().positive(),
+    teamLabel: text,
+    opponentTeamLabel: text,
+    teamResult: z.enum(["win", "loss"]),
+    position: z.enum(["senpo", "chuken", "taisho", "daihyo"]),
+    opponentName: text,
+    boutResult: z.enum(["win", "loss", "draw"]),
+    ipponFor: z.number().int().nonnegative(),
+    ipponAgainst: z.number().int().nonnegative(),
+    hansoku: z.number().int().nonnegative(),
+    pointsByWaza: sundayResultWazaSchema,
+  }).strict()),
+}).strict();
+
 export const sundayHostConsoleSchema = z.object({
   session: sundaySessionSchema,
   waitingCount: z.number().int().nonnegative(),
@@ -114,5 +160,6 @@ export type SundayProfile = z.infer<typeof sundayProfileSchema>;
 export type SundayFastRegistrationRequest = z.infer<typeof sundayFastRegistrationRequestSchema>;
 export type SundayLobby = z.infer<typeof sundayLobbySchema>;
 export type SundayGameState = z.infer<typeof sundayGameStateSchema>;
+export type SundayResult = z.infer<typeof sundayResultSchema>;
 export type SundayHostConsole = z.infer<typeof sundayHostConsoleSchema>;
 export type SundayMatch = z.infer<typeof sundayMatchSchema>;

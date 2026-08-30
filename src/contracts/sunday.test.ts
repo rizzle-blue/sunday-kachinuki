@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { sundayFastRegistrationRequestSchema, sundayHostConsoleSchema, sundayInviteRequestSchema, sundayScoreEventRequestSchema } from "./sunday";
+import { sundayFastRegistrationRequestSchema, sundayHostConsoleSchema, sundayInviteRequestSchema, sundayResultSchema, sundayScoreEventRequestSchema } from "./sunday";
 
 describe("Sunday Kachinuki contracts", () => {
   test("accepts a normalized reusable invite code", () => {
@@ -43,5 +43,48 @@ describe("Sunday Kachinuki contracts", () => {
     const result = sundayHostConsoleSchema.shape.readyEntries.safeParse([readyEntry]);
     expect(result.success).toBe(true);
     expect(sundayHostConsoleSchema.shape.readyEntries.safeParse([{ ...readyEntry, state: "playing" }]).success).toBe(false);
+  });
+
+test("validates an individual result with Kendo waza breakdown", () => {
+    const result = sundayResultSchema.parse({
+      session: {
+        sessionId: "83000000-0000-4000-8000-000000000001",
+        name: "Sunday Kachinuki",
+        startedAt: "2026-08-30T03:05:22.052Z",
+        completedAt: "2026-08-30T04:11:22.046Z",
+        durationMinutes: 66,
+      },
+      summary: {
+        matchesPlayed: 3,
+        formationCount: 2,
+        teamWins: 2,
+        teamLosses: 1,
+        winRate: 66.7,
+        boutsFought: 3,
+        boutWins: 2,
+        boutLosses: 0,
+        boutDraws: 1,
+        ipponScored: 5,
+        ipponConceded: 2,
+        hansoku: 0,
+        pointsByWaza: { men: 3, kote: 1, do: 1, tsuki: 0 },
+        excludedMatches: 2,
+      },
+      history: [{
+        matchSequence: 1,
+        teamLabel: "Indigo Tora",
+        opponentTeamLabel: "Crimson Kitsune",
+        teamResult: "win",
+        position: "senpo",
+        opponentName: "Demo Kenshi Two",
+        boutResult: "win",
+        ipponFor: 2,
+        ipponAgainst: 1,
+        hansoku: 0,
+        pointsByWaza: { men: 2, kote: 0, do: 0, tsuki: 0 },
+      }],
+    });
+    expect(result.summary.excludedMatches).toBe(2);
+    expect(result.summary.pointsByWaza.tsuki).toBe(0);
   });
 });
