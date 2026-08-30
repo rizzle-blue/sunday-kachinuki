@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MenMark } from "@/components/men-mark";
 import { ensureAnonymousSession, normalizeInviteCode, redeemInvite, registerProfile } from "@/lib/api";
+import { entranceErrorMessage } from "@/lib/entrance-error";
 
 declare global {
   interface Window {
@@ -89,12 +90,12 @@ function Entrance() {
         });
       }
       window.location.assign("/profile");
-    } catch {
+    } catch (cause) {
       setBusy(false);
       setPending(undefined);
       setCaptchaToken(undefined);
       if (widgetId.current) window.turnstile?.reset(widgetId.current);
-      setError(action.kind === "invite" ? "Invite code chưa đúng. Kiểm tra lại và thử lần nữa nhé." : "Chưa thể tạo Kenshi profile. Kiểm tra các thông tin và thử lại.");
+      setError(entranceErrorMessage(cause, action.kind));
     }
   }
 
