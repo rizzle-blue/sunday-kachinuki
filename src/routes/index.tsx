@@ -144,7 +144,7 @@ function Entrance() {
           <MenMark className="hero-mark" />
           <p className="kicker">31 · 08 · 2026 / secret session</p>
           <h1>Sunday<br />Kachinuki</h1>
-          <p className="hero-copy">Một giờ. Một court. Đội thắng sống tiếp, đội thua trở lại vòng xoay. Mở Battle Card rồi bước vào đội hình.</p>
+          <p className="hero-copy hero-haiku">Shinai meet at dawn<br />One breath crosses the white line<br />The next bout begins.</p>
         </section>
         <section className="panel entrance-panel">
           <div className="segmented" role="tablist" aria-label="Cách vào Sunday Kachinuki">

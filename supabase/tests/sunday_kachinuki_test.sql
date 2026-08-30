@@ -1,5 +1,5 @@
 begin;
-select plan(44);
+select plan(47);
 
 select has_table('sunday_private', 'kenshi_profiles', 'Sunday profiles use standalone private storage');
 select has_table('sunday_private', 'game_sessions', 'Sunday owns an isolated game session');
@@ -61,6 +61,11 @@ select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000007'
 set local role authenticated;
 select is(public.redeem_sunday_invite('one_demo')->>'profileId','91000000-0000-4000-8000-000000000001','reusable code links another phone to the same profile');
 select lives_ok($$ select public.set_sunday_ready(true,'94000000-0000-4000-8000-000000000007') $$,'duplicate phone Ready is profile-idempotent');
+select is(public.redeem_sunday_invite('two_demo')->>'name','Demo Kenshi Two','a phone can switch to another valid invite');
+reset role;
+select is((select count(*) from sunday_private.profile_sessions where auth_subject_id='93000000-0000-4000-8000-000000000007'),1::bigint,'invite switch reuses one phone session link');
+set local role authenticated;
+select is(public.redeem_sunday_invite('one_demo')->>'name','Demo Kenshi One','a phone can switch back without a new Auth session');
 reset role;
 
 do $$

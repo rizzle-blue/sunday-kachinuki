@@ -13,6 +13,7 @@ for (const viewport of VIEWPORTS) {
     await page.setViewportSize(viewport);
     await page.goto("/");
     await expect(page.getByRole("heading", { name: /Sunday Kachinuki/i })).toBeVisible();
+    await expect(page.getByText("Shinai meet at dawn")).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
     await page.goto("/host");
@@ -47,7 +48,10 @@ test("anonymous invite reveals card with adjacent Ready and Logout actions on mo
   await expect(page.getByRole("button", { name: "Reveal my card" })).toBeVisible();
   await page.waitForTimeout(500);
   await expect(page).toHaveURL(/\/$/);
-  await page.goto("/profile");
+  await page.getByLabel("Invite code").fill("two_demo");
+  await page.getByRole("button", { name: "Reveal my card" }).click();
+  await page.waitForURL("**/profile");
+  await expect(page.getByRole("heading", { name: "Demo Kenshi Two" })).toBeVisible();
   await page.getByRole("button", { name: "Logout" }).click();
   await page.waitForURL("**/");
   await expect(page.getByRole("button", { name: "Reveal my card" })).toBeVisible();

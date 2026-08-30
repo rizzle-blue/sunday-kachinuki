@@ -49,6 +49,7 @@ button:active:not(:disabled), a:active { transform: translateY(1px); }
 .hero h1, .page-title { margin: 0; font-family: var(--font-heading); font-weight: 700; line-height: 1.04; letter-spacing: -.03em; text-wrap: balance; }
 .hero h1 { font-size: clamp(3rem, 14vw, 6.2rem); }
 .hero-copy { max-width: 36rem; margin: 1.15rem 0 0; color: var(--sumi-soft); font-size: 1rem; }
+.hero-haiku { font-family: var(--font-heading); font-size: clamp(1.05rem, 2.2vw, 1.25rem); line-height: 1.65; }
 .kicker, .eyebrow { margin: 0 0 .6rem; color: var(--aka); font-size: .72rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
 
 .panel { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--shiro); box-shadow: 0 8px 24px rgb(26 23 20 / 8%); padding: clamp(1.1rem, 3vw, 1.5rem); }
