@@ -1,5 +1,5 @@
 begin;
-select plan(69);
+select plan(72);
 
 select has_table('sunday_private', 'kenshi_profiles', 'Sunday profiles use standalone private storage');
 select has_table('sunday_private', 'game_sessions', 'Sunday owns an isolated game session');
@@ -234,6 +234,24 @@ values('97200000-0000-4000-8000-000000000002','fixture recording error');
 select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000099',true);
 set local role authenticated;
 select throws_ok($$ select public.get_my_sunday_result() $$,'P0002','P0002','host cannot read a participant result');
+reset role;
+
+update sunday_private.game_sessions
+set state = 'completed', completed_at = coalesce(completed_at, now())
+where state in ('lobby', 'live', 'stopping');
+
+select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000001',true);
+set local role authenticated;
+select is(public.get_my_sunday_profile()->>'name','Demo Kenshi One','an already-linked Kenshi keeps profile access after completion');
+reset role;
+
+insert into auth.users(id,instance_id,aud,role,email,encrypted_password,email_confirmed_at,created_at,updated_at,is_anonymous)
+values('93000000-0000-4000-8000-000000000010','00000000-0000-0000-0000-000000000000','authenticated','authenticated',null,'',now(),now(),now(),true);
+
+select set_config('request.jwt.claim.sub','93000000-0000-4000-8000-000000000010',true);
+set local role authenticated;
+select throws_ok($$ select public.redeem_sunday_invite('one_demo') $$,'25006','session_ended','a new device cannot redeem after completion');
+select throws_ok($$ select public.register_sunday_profile('Late Kenshi','Late','Shakaijin',1,'under_1_dan') $$,'25006','session_ended','fast registration closes after completion');
 reset role;
 
 select is((select count(*) from pg_proc join pg_namespace on pg_namespace.oid=pg_proc.pronamespace where nspname='sunday_private' and proname like '%recover%'),0::bigint,'Sunday has no recovery function');

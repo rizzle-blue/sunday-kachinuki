@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { MenMark } from "@/components/men-mark";
-import { ensureAnonymousSession, normalizeInviteCode, redeemInvite, registerProfile } from "@/lib/api";
+import type { SundayProfile } from "@/contracts/sunday";
+import { sundayProfileSlug } from "@/domain/sunday";
+import { ensureAnonymousSession, getProfile, normalizeInviteCode, redeemInvite, registerProfile } from "@/lib/api";
 import { entranceErrorMessage } from "@/lib/entrance-error";
 
 declare global {
@@ -34,6 +36,8 @@ function plainText(value: FormDataEntryValue | null): string {
 }
 
 function Entrance() {
+  const [entranceState] = useState<"loading" | "open" | "ended">("ended");
+  const [existingProfile, setExistingProfile] = useState<SundayProfile>();
   const [mode, setMode] = useState<"invite" | "register">("invite");
   const [hydrated, setHydrated] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -44,7 +48,16 @@ function Entrance() {
   const widgetId = useRef<string | undefined>(undefined);
   const siteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
-  useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    let active = true;
+    setHydrated(true);
+    void getProfile()
+      .then((profile) => {
+        if (active) setExistingProfile(profile);
+      })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
   useEffect(() => {
     if (!siteKey || !widgetRoot.current) return;
     const render = () => {
@@ -136,6 +149,34 @@ function Entrance() {
     if (busy) return;
     setMode(nextMode);
     setError(null);
+  }
+
+  if (entranceState !== "open") {
+    const checking = entranceState === "loading";
+    return (
+      <main className="hero shell">
+        <div className="hero-grid">
+          <section className="hero-intro">
+            <MenMark className="hero-mark" />
+            <p className="kicker">31 · 08 · 2026 / secret session</p>
+            <h1>Sunday<br />Kachinuki</h1>
+            <p className="hero-copy hero-haiku">Shinai meet at dawn<br />One breath crosses the white line<br />The next bout begins.</p>
+          </section>
+          <section className="panel entrance-panel ended-panel" aria-live="polite">
+            <p className="kicker">{checking ? "Checking session" : "Session complete"}</p>
+            <h2>{checking ? "Đang kiểm tra võ đường…" : "Sunday session has ended."}</h2>
+            {!checking ? <p className="muted">The shinai are at rest. Battle Cards and individual records remain available only on devices that joined this session.</p> : null}
+            {!checking && existingProfile ? (
+              <div className="ended-actions">
+                <p>Welcome back, <strong>{existingProfile.nickname}</strong>.</p>
+                <Link className="button" to="/profile">View my Battle Card</Link>
+                <Link className="button secondary" to="/profile/$userSlug/individuals" params={{ userSlug: sundayProfileSlug(existingProfile.name) }}>View my Sunday record</Link>
+              </div>
+            ) : null}
+          </section>
+        </div>
+      </main>
+    );
   }
 
   return (
